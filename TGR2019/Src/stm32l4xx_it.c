@@ -57,9 +57,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-float PRESSURE;
-float HUMIDITY;
-float TEMPERATURE;
+int PRESSURE;
+uint16_t in_people=0;
+uint16_t out_people = 0;
+int PRESSURE;
+
+uint16_t HUMIDITY;
+int16_t TEMPERATURE;
 
 int16_t pDataXYZ[3];
 float pfDataXYZ[3];
@@ -248,64 +252,65 @@ void USART1_IRQHandler(void)
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
-  RX_BUFF[0] = USART1->RDR;
-  char str[50];
 
-  int16_t DISTANCE = prox_value;
-
-  if(RX_BUFF[0] == 49){/// '1'
-	  sprintf(str,"PRESSURE is = %.2f mBar\n\r",PRESSURE);
-	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
-
-  }else if(RX_BUFF[0] == 50){/// '2'
-	  sprintf(str,"HUMIDITY is = %.2f %%\n\r",HUMIDITY);
-	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
-
-
-  }else if(RX_BUFF[0] == 51){/// '3'
-	  sprintf(str,"TEMPERATURE is = %.2f *C\n\r",TEMPERATURE);
-	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
-
-
-  }
-
-  else if(RX_BUFF[0] == 52){/// '4'
-	  int accX = pDataXYZ[0];
-	  int accY = pDataXYZ[1];
-	  int accZ = pDataXYZ[2];
-	  sprintf(str,"ACCELERO xyz = %d, %d, %d\n\r",accX,accY,accZ);
-	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
-  }
-  else if(RX_BUFF[0] == 53){/// '5'
-	  float gyrX = pfDataXYZ[0];
-	  float gyrY = pfDataXYZ[1];
-	  float gyrZ = pfDataXYZ[2];
-	  sprintf(str,"GYRO xyz = %.2f, %.2f, %.2f\n\r",gyrX,gyrY,gyrZ);
-	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
-
-
-  }
-  else if(RX_BUFF[0] == 54){/// '6'
-
-	  int magX = pDataXYZ1[0];
-	  int magY = pDataXYZ1[1];
-	  int magZ = pDataXYZ1[2];
-	  sprintf(str,"MAGNETO xyz = %d, %d, %d\n\r",magX,magY,magZ);
-	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
-
-
-  }
-  else if(RX_BUFF[0] == 55){/// '7'
-	  sprintf(str,"DISTANCE is %d mm\n\r",DISTANCE);
-	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
-
-
-  }
-
-  else{
-	  HAL_UART_Transmit(&huart1, "no sensor\n\r", 13,1000);
-
-  }
+//  RX_BUFF[0] = USART1->RDR;
+//  char str[50];
+//
+//  int16_t DISTANCE = prox_value;
+//
+//  if(RX_BUFF[0] == 49){/// '1'
+//	  sprintf(str,"PRESSURE is = %.2f mBar\n\r",PRESSURE);
+//	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
+//
+//  }else if(RX_BUFF[0] == 50){/// '2'
+//	  sprintf(str,"HUMIDITY is = %.2f %%\n\r",HUMIDITY);
+//	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
+//
+//
+//  }else if(RX_BUFF[0] == 51){/// '3'
+//	  sprintf(str,"TEMPERATURE is = %.2f *C\n\r",TEMPERATURE);
+//	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
+//
+//
+//  }
+//
+//  else if(RX_BUFF[0] == 52){/// '4'
+//	  int accX = pDataXYZ[0];
+//	  int accY = pDataXYZ[1];
+//	  int accZ = pDataXYZ[2];
+//	  sprintf(str,"ACCELERO xyz = %d, %d, %d\n\r",accX,accY,accZ);
+//	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
+//  }
+//  else if(RX_BUFF[0] == 53){/// '5'
+//	  float gyrX = pfDataXYZ[0];
+//	  float gyrY = pfDataXYZ[1];
+//	  float gyrZ = pfDataXYZ[2];
+//	  sprintf(str,"GYRO xyz = %.2f, %.2f, %.2f\n\r",gyrX,gyrY,gyrZ);
+//	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
+//
+//
+//  }
+//  else if(RX_BUFF[0] == 54){/// '6'
+//
+//	  int magX = pDataXYZ1[0];
+//	  int magY = pDataXYZ1[1];
+//	  int magZ = pDataXYZ1[2];
+//	  sprintf(str,"MAGNETO xyz = %d, %d, %d\n\r",magX,magY,magZ);
+//	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
+//
+//
+//  }
+//  else if(RX_BUFF[0] == 55){/// '7'
+//	  sprintf(str,"DISTANCE is %d mm\n\r",DISTANCE);
+//	  HAL_UART_Transmit(&huart1,str, strlen(str),1000);
+//
+//
+//  }
+//
+//  else{
+//	  HAL_UART_Transmit(&huart1, "no sensor\n\r", 13,1000);
+//
+//  }
   /* USER CODE END USART1_IRQn 1 */
 }
 
@@ -351,6 +356,25 @@ void TIM6_DAC_IRQHandler(void)
   /* USER CODE END TIM6_DAC_IRQn 0 */
   HAL_TIM_IRQHandler(&htim6);
   /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
+  char str[200];
+
+  sprintf(str,"AT+SENDB=99:0067%04x0168%02x0202%04x0302%04x\n\r",(int16_t)TEMPERATURE,(uint16_t)HUMIDITY,(uint16_t)in_people,(uint16_t)out_people);
+//      sprintf(str1,"%d\n\r",TEMPERATURE*10);
+
+  HAL_UART_Transmit(&huart1,str, strlen(str),1000); // huart4
+
+  HAL_UART_Transmit(&huart4,str, strlen(str),1000); // huart4
+
+
+//  HAL_Delay(2000);
+
+  HAL_UART_Transmit(&huart4,"AT\n\r", 5,1000);
+//  HAL_Delay(2000);
+  HAL_UART_Transmit(&huart1,str, strlen(str),1000); // huart4
+
+  HAL_UART_Transmit(&huart4,str, strlen(str),1000); // huart4
+  in_people = 0;
+  out_people = 0;
 
   /* USER CODE END TIM6_DAC_IRQn 1 */
 }

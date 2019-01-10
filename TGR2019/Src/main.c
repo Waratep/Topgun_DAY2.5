@@ -57,7 +57,16 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 #include "string.h"
+#define LPP_DATATYPE_DIGITAL_INPUT  0x0   //0
+#define LPP_DATATYPE_DIGITAL_OUTPUT 0x1   //1
 
+#define LPP_DATATYPE_BAROMETER      0x73  //115
+#define LPP_DATATYPE_TEMPERATURE    0x67  //103
+#define LPP_DATATYPE_HUMIDITY       0x68  //104
+
+#define LPP_DATATYPE_ACCELEROMETER  0x71  //113
+#define LPP_DATATYPE_GYROMETER    	0x86  //134
+#define LPP_DATATYPE_ANALOG_INPUT   0x2   //2
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -119,14 +128,28 @@ VL53L0X_Dev_t Dev =
   .I2cDevAddr = PROXIMITY_I2C_ADDRESS
 };
 
-extern float PRESSURE;
-extern float HUMIDITY;
-extern float TEMPERATURE;
+extern int PRESSURE;
+extern uint16_t HUMIDITY;
+extern int16_t TEMPERATURE;
 
 extern int16_t pDataXYZ[3];
 extern float pfDataXYZ[3];
 extern int16_t pDataXYZ1[3];
 extern uint16_t prox_value;
+extern uint16_t in_people,out_people;
+uint16_t buff_in,buff_out = 0;
+
+
+char *toHex(u_int8_t *buff, int size)
+{
+	 char buffer[80] = {};
+	 for (int i = 0; i < size; i++)
+	 {
+	   sprintf(buffer + (i * 2), "%02x", buff[i]);
+	 }
+	 return buffer;
+}
+
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -190,7 +213,21 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6);
   __HAL_UART_ENABLE_IT(&huart1,UART_IT_RXNE);
 
+  HAL_Delay(1000);
+  HAL_UART_Transmit(&huart4,"AT+NJM=?\n\r", 9,1000); // huart4
+  HAL_Delay(1000);
+  HAL_UART_Transmit(&huart4,"AT+NJM=1\n\r", 9,1000); // huart4
+  HAL_Delay(1000);
+  HAL_UART_Transmit(&huart4,"AT+NJM=?\n\r", 9,1000); // huart4
+  HAL_Delay(1000);
+  HAL_UART_Transmit(&huart4,"AT+JOIN\n\r", 9,1000); // huart4
+  HAL_Delay(5000);
+  HAL_UART_Transmit(&huart4,"AT+NJS=?\n\r", 9,1000); // huart4
+  HAL_Delay(2000);
+  HAL_UART_Transmit(&huart4,"AT+NJS=?\n\r", 9,1000); // huart4
+  HAL_Delay(1000);
 
+  ;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -204,9 +241,9 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  PRESSURE = BSP_PSENSOR_ReadPressure();
+	  PRESSURE = BSP_PSENSOR_ReadPressure()*10;
 	  HUMIDITY = BSP_HSENSOR_ReadHumidity();
-	  TEMPERATURE = BSP_TSENSOR_ReadTemp();
+	  TEMPERATURE = BSP_TSENSOR_ReadTemp()*10;
 
 	  BSP_ACCELERO_AccGetXYZ(pDataXYZ);
 	  BSP_GYRO_GetXYZ(pfDataXYZ);
@@ -214,10 +251,54 @@ int main(void)
 
       prox_value = VL53L0X_PROXIMITY_GetDistance();
 
-      char str[100];
-	  sprintf(str,"0066%.2f0168%.2f0267%.2f03 04 05 06\n\r",PRESSURE,HUMIDITY,TEMPERATURE);
-	  HAL_UART_Transmit(&huart4,str, strlen(str),1000);
 
+      if(prox_value > 67 && prox_value < 140){
+		  while(prox_value < 800){
+			  prox_value = VL53L0X_PROXIMITY_GetDistance();
+		  }
+		  in_people+=100;
+      }else if(prox_value > 360 && prox_value < 430){
+		  while(prox_value < 800){
+			  prox_value = VL53L0X_PROXIMITY_GetDistance();
+		  }
+		  out_people+=100;
+      }else if(prox_value > 800){
+
+      }
+
+
+//      if(buff_in > 5){
+//    	  in_people++;
+//    	  buff_in = 0;
+//
+//      }
+//
+//      if(buff_out > 5){
+//    	  out_people++;
+//    	  buff_out = 0;
+//
+//      }
+
+      char str1[10];
+//	  sprintf(str,"%.2f#%.2f#%.2f#%d#%d#%d#%.2f#%.2f#%.2f#%d#%d#%d#%d\n\r",PRESSURE,HUMIDITY,TEMPERATURE,pDataXYZ[0],pDataXYZ[1],pDataXYZ[2],pfDataXYZ[0],pfDataXYZ[1],pfDataXYZ[2],pDataXYZ1[0],pDataXYZ1[1],pDataXYZ1[2],prox_value);
+//	  HAL_UART_Transmit(&huart1,str, strlen(str),1000); // huart4
+      sprintf(str1,"prox = %d , in = %d , out = %d \n\r",prox_value,in_people,out_people);
+      HAL_UART_Transmit(&huart1,str1, strlen(str1),1000);
+
+
+//      sprintf(str,"AT+SENDB=99:0067%04x0168%02x0202%04x0302%04x\n\r",(int16_t)TEMPERATURE,(uint16_t)HUMIDITY,(uint16_t)in_people,(uint16_t)out_people);
+////      sprintf(str1,"%d\n\r",TEMPERATURE*10);
+//
+//      HAL_UART_Transmit(&huart1,str, strlen(str),1000); // huart4
+//      HAL_UART_Transmit(&huart4,str, strlen(str),1000); // huart4
+//
+//
+//      HAL_Delay(2000);
+//
+//      HAL_UART_Transmit(&huart4,"AT\n\r", 5,1000);
+//      HAL_Delay(2000);
+//      HAL_UART_Transmit(&huart1,str, strlen(str),1000); // huart4
+//      HAL_UART_Transmit(&huart4,str, strlen(str),1000); // huart4
 
   }
   /* USER CODE END 3 */
@@ -474,9 +555,9 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 999;
+  htim6.Init.Prescaler = 49999;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 40000;
+  htim6.Init.Period = 48000;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
