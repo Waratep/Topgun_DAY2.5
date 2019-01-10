@@ -255,14 +255,18 @@ int main(void)
       if(prox_value > 67 && prox_value < 140){
 		  while(prox_value < 800){
 			  prox_value = VL53L0X_PROXIMITY_GetDistance();
+			  GPIOB->BSRR = 0x4000;
 		  }
 		  in_people+=100;
       }else if(prox_value > 360 && prox_value < 430){
 		  while(prox_value < 800){
 			  prox_value = VL53L0X_PROXIMITY_GetDistance();
+			  GPIOB->BSRR = 0x4000;
+
 		  }
 		  out_people+=100;
       }else if(prox_value > 800){
+		  GPIOB->BRR  = 0x4000;
 
       }
 
