@@ -140,17 +140,6 @@ extern uint16_t in_people,out_people;
 uint16_t buff_in,buff_out = 0;
 
 
-char *toHex(u_int8_t *buff, int size)
-{
-	 char buffer[80] = {};
-	 for (int i = 0; i < size; i++)
-	 {
-	   sprintf(buffer + (i * 2), "%02x", buff[i]);
-	 }
-	 return buffer;
-}
-
-
 
 /* Private function prototypes -----------------------------------------------*/
 //static void VL53L0X_PROXIMITY_MspInit(void);
@@ -227,13 +216,16 @@ int main(void)
   HAL_UART_Transmit(&huart4,"AT+NJS=?\n\r", 9,1000); // huart4
   HAL_Delay(1000);
 
-  ;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-
+  for(uint8_t i = 0 ; i < 4 ; i++){
+	  GPIOC->BSRR = 0x200;
+	  HAL_Delay(25);
+	  GPIOC->BRR = 0x200;
+	  HAL_Delay(25);
+  }
 
   while (1)
   {
@@ -262,6 +254,13 @@ int main(void)
 		  while(prox_value < 800){
 			  prox_value = VL53L0X_PROXIMITY_GetDistance();
 			  GPIOB->BSRR = 0x4000;
+			  HAL_Delay(25);
+			  GPIOB->BRR  = 0x4000;
+			  HAL_Delay(25);
+			  GPIOB->BSRR = 0x4000;
+			  HAL_Delay(25);
+			  GPIOB->BRR  = 0x4000;
+			  HAL_Delay(25);
 
 		  }
 		  out_people+=100;

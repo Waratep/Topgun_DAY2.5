@@ -352,7 +352,6 @@ void UART4_IRQHandler(void)
 void TIM6_DAC_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM6_DAC_IRQn 0 */
-  GPIOC->BSRR = 0x200;
 
   /* USER CODE END TIM6_DAC_IRQn 0 */
   HAL_TIM_IRQHandler(&htim6);
@@ -377,10 +376,10 @@ void TIM6_DAC_IRQHandler(void)
   in_people = 0;
   out_people = 0;
 
-
+  GPIOC->BSRR = 0x200;
   HAL_Delay(100);
-
   GPIOC->BRR = 0x200;
+
 
   /* USER CODE END TIM6_DAC_IRQn 1 */
 }
